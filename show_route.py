@@ -1,9 +1,10 @@
 import vtk
 import numpy as np
 from route_plan import *
+from utils import *
 
 
-def lines_to_actors(points_array):
+def lines2Actors(points_array):
     """
     :param points_array: shape: [N+1, 3], line_array[0]为target point
     :return: N条从target point射出的射线
@@ -43,26 +44,6 @@ def lines_to_actors(points_array):
     return actor
 
 
-def vtk_to_actors(vtk_list):
-    actors = []
-    for file, prop in vtk_list.items():
-        reader = vtk.vtkPolyDataReader()
-        reader.SetFileName(file)
-        reader.Update()
-
-        mapper = vtk.vtkPolyDataMapper()
-        mapper.SetInputConnection(reader.GetOutputPort())
-
-        actor = vtk.vtkActor()
-        actor.GetProperty().SetColor(prop[:3])
-        actor.GetProperty().SetOpacity(prop[3])
-        actor.SetMapper(mapper)
-
-        actors.append(actor)
-
-    return actors
-
-
 def show_organs_lines(organs_actors, line_actor):
     renderer = vtk.vtkRenderer()
     for actor in organs_actors:
@@ -82,20 +63,22 @@ def show_organs_lines(organs_actors, line_actor):
 
 
 if __name__ == "__main__":
-    vtk_list = {r"D:\Annotation\3Dircadb1\3Dircadb1.8\MESHES_VTK\artery.vtk": [1.0, 0.0, 0.0, 0.9],
+    vtk_list = {r"D:\Annotation\3Dircadb1\3Dircadb1.8\MESHES_VTK\artery.vtk": [1.0, 0.0, 0.0, 1.0],
                 r"D:\Annotation\3Dircadb1\3Dircadb1.8\MESHES_VTK\bone.vtk": [1.0, 1.0, 1.0, 1.0],
-                r"D:\Annotation\3Dircadb1\3Dircadb1.8\MESHES_VTK\portalvein.vtk": [1.0, 0.0, 0.0, 0.8],
-                r"D:\Annotation\3Dircadb1\3Dircadb1.8\MESHES_VTK\venoussystem.vtk": [1.0, 0.0, 0.0, 0.8],
+                r"D:\Annotation\3Dircadb1\3Dircadb1.8\MESHES_VTK\portalvein.vtk": [1.0, 0.0, 0.0, 1.0],
+                r"D:\Annotation\3Dircadb1\3Dircadb1.8\MESHES_VTK\venoussystem.vtk": [1.0, 0.0, 0.0, 1.0],
                 r"D:\Annotation\3Dircadb1\3Dircadb1.8\MESHES_VTK\liver.vtk": [0.5, 0.7, 0.7, .0],
                 r"D:\Annotation\3Dircadb1\3Dircadb1.8\MESHES_VTK\livertumor03.vtk": [0.0, 1.0, 0.0, 1.0]}
-    organs_actors = vtk_to_actors(vtk_list)
+
+    poly_datas = readPolydatas(list(vtk_list.keys()))
+    neg_resample_poly = resamplePolyData(poly_datas[:-2])
+
+    neg_array = polydatas2Array(neg_resample_poly)
+    seed_point = getSeedPoint([list(vtk_list.keys())[-1]])
 
     # points_array = np.array([[0.0, 0.0, 0.0], [0.0, 100.0, 0.0], [0.0, .0, 100.0]])
-    seed_point = getSeedPoint([r"D:\Annotation\3Dircadb1\3Dircadb1.8\MESHES_VTK\livertumor03.vtk"])
-    print("seed point: " + str(seed_point))
-    neg_array = polydatas2Array(readPolydatas(list(vtk_list.keys())[:-2]))
+    points_array = routePlan(seed_point, neg_array, gap=10, angle=[90, 180])
 
-    points_array = routePlan(seed_point, neg_array, gap=36)
-    line_actor = lines_to_actors(points_array)
-
+    line_actor = lines2Actors(points_array)
+    organs_actors = polydatas2Actors(poly_datas, list(vtk_list.values()))
     show_organs_lines(organs_actors, line_actor)
