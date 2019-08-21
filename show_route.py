@@ -4,11 +4,15 @@ from route_plan import *
 from utils import *
 
 
-def lines2Actors(points_array):
+def lines2Actor(points_array, line_width=1, line_color=[1.0, 1.0, 0.0]):
     """
+    从points_array构建vtkPolyData
     :param points_array: shape: [N+1, 3], line_array[0]为target point
-    :return: N条从target point射出的射线
+    :param line_width: 射线宽度
+    :param line_color: 射线颜色
+    :return: vtkActor，表示N条从target point射出的射线
     """
+
     # Create a vtkPoints object and store the points in it
     points = vtk.vtkPoints()
     for point in points_array:
@@ -38,13 +42,14 @@ def lines2Actors(points_array):
     actor = vtk.vtkActor()
     actor.SetMapper(mapper)
 
-    actor.GetProperty().SetLineWidth(1)
-    actor.GetProperty().SetColor([1.0, 1.0, 0.0])
+    actor.GetProperty().SetLineWidth(line_width)
+    actor.GetProperty().SetColor(line_color)
 
     return actor
 
 
 def show_organs_lines(organs_actors, line_actor):
+    # 绘制器官与射线路径
     renderer = vtk.vtkRenderer()
     for actor in organs_actors:
         renderer.AddActor(actor)
@@ -63,6 +68,7 @@ def show_organs_lines(organs_actors, line_actor):
 
 
 if __name__ == "__main__":
+    # 所有.vtk文件以及相应可视化属性[R, G, B, Opacity]
     vtk_list = {r"D:\Annotation\3Dircadb1\3Dircadb1.8\MESHES_VTK\artery.vtk": [1.0, 0.0, 0.0, 1.0],
                 r"D:\Annotation\3Dircadb1\3Dircadb1.8\MESHES_VTK\bone.vtk": [1.0, 1.0, 1.0, 1.0],
                 r"D:\Annotation\3Dircadb1\3Dircadb1.8\MESHES_VTK\portalvein.vtk": [1.0, 0.0, 0.0, 1.0],
@@ -70,15 +76,15 @@ if __name__ == "__main__":
                 r"D:\Annotation\3Dircadb1\3Dircadb1.8\MESHES_VTK\liver.vtk": [0.5, 0.7, 0.7, .0],
                 r"D:\Annotation\3Dircadb1\3Dircadb1.8\MESHES_VTK\livertumor03.vtk": [0.0, 1.0, 0.0, 1.0]}
 
+    # 读取.vtk文件
     poly_datas = readPolydatas(list(vtk_list.keys()))
-    neg_resample_poly = resamplePolyData(poly_datas[:-2])
+    # 根据肿瘤得到target point
+    seed_point = getTargetPoint([list(vtk_list.keys())[-1]])
 
-    neg_array = polydatas2Array(neg_resample_poly)
-    seed_point = getSeedPoint([list(vtk_list.keys())[-1]])
+    # 路径规划，第二个参数是所有需要避开的器官的polydata
+    points_array = routePlan(seed_point, poly_datas[:-2], gap=18, angle=[90, 180])
 
-    # points_array = np.array([[0.0, 0.0, 0.0], [0.0, 100.0, 0.0], [0.0, .0, 100.0]])
-    points_array = routePlan(seed_point, neg_array, gap=18, angle=[90, 180])
-
-    line_actor = lines2Actors(points_array)
+    line_actor = lines2Actor(points_array)
     organs_actors = polydatas2Actors(poly_datas, list(vtk_list.values()))
+
     show_organs_lines(organs_actors, line_actor)
