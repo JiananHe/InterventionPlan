@@ -30,21 +30,19 @@ def routePlan(seed_point, neg_array, gap=1, line_len=300, angle=[0, 180]):
     print("all neg line: ", neg_alpha_beta.shape)
 
     # 过滤得到所有可取的射线
+    neg_ff = np.concatenate((np.floor(neg_alpha_beta[:, 0]),
+                             np.floor(neg_alpha_beta[:, 1]))).reshape((-1, 2), order='F')
+    neg_fc = np.concatenate((np.floor(neg_alpha_beta[:, 0]),
+                             np.ceil(neg_alpha_beta[:, 1]))).reshape((-1, 2), order='F')
+    neg_cf = np.concatenate((np.ceil(neg_alpha_beta[:, 0]),
+                             np.floor(neg_alpha_beta[:, 1]))).reshape((-1, 2), order='F')
+    neg_cc = np.concatenate((np.ceil(neg_alpha_beta[:, 0]),
+                             np.ceil(neg_alpha_beta[:, 1]))).reshape((-1, 2), order='F')
     set_alpha_beta = set(map(tuple, all_alpha_beta))
-    for a in range(-gap, gap+1, gap):
-        for b in range(-gap, gap+1, gap):
-            neg_ff = np.concatenate((np.floor(neg_alpha_beta[:, 0])+a,
-                                     np.floor(neg_alpha_beta[:, 1])+b)).reshape((-1, 2), order='F')
-            neg_fc = np.concatenate((np.floor(neg_alpha_beta[:, 0])+a,
-                                     np.ceil(neg_alpha_beta[:, 1])+b)).reshape((-1, 2), order='F')
-            neg_cf = np.concatenate((np.ceil(neg_alpha_beta[:, 0])+a,
-                                     np.floor(neg_alpha_beta[:, 1])+b)).reshape((-1, 2), order='F')
-            neg_cc = np.concatenate((np.ceil(neg_alpha_beta[:, 0])+a,
-                                     np.ceil(neg_alpha_beta[:, 1])+b)).reshape((-1, 2), order='F')
-            set_alpha_beta = set_alpha_beta.difference(map(tuple, neg_ff))
-            set_alpha_beta = set_alpha_beta.difference(map(tuple, neg_fc))
-            set_alpha_beta = set_alpha_beta.difference(map(tuple, neg_cf))
-            set_alpha_beta = set_alpha_beta.difference(map(tuple, neg_cc))
+    set_alpha_beta = set_alpha_beta.difference(map(tuple, neg_ff))
+    set_alpha_beta = set_alpha_beta.difference(map(tuple, neg_fc))
+    set_alpha_beta = set_alpha_beta.difference(map(tuple, neg_cf))
+    set_alpha_beta = set_alpha_beta.difference(map(tuple, neg_cc))
 
     # set to array
     pos_alpha_beta = np.array([np.array(t) for t in set_alpha_beta])

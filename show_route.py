@@ -77,7 +77,7 @@ if __name__ == "__main__":
     seed_point = getSeedPoint([list(vtk_list.keys())[-1]])
 
     # points_array = np.array([[0.0, 0.0, 0.0], [0.0, 100.0, 0.0], [0.0, .0, 100.0]])
-    points_array = routePlan(seed_point, neg_array, gap=10, angle=[90, 180])
+    points_array = routePlan(seed_point, neg_array, gap=18, angle=[90, 180])
 
     line_actor = lines2Actors(points_array)
     organs_actors = polydatas2Actors(poly_datas, list(vtk_list.values()))
