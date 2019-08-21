@@ -1,11 +1,11 @@
 # InterventionPlan
 Plan intervention routes that avoid organs and reach tumor.
 
-## Requirement
+## Requirements
 >* vtk
 >* numpy
 
-## usage
+## Usage
 ```python
 python show_route.py
 ```
